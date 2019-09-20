@@ -104,7 +104,12 @@ int main() {
             car_s = end_path_s;
           }
 
+          int intended_lane = 0;
           bool too_close = false;
+          bool intend_to_change_lane = true;
+          bool change_lane = true;
+          static double counter = 0;
+          counter ++;
 
           // find ref_v to use
           for (int i = 0; i < sensor_fusion.size(); i++) {
@@ -122,16 +127,145 @@ int main() {
                 // Do some logic here, lower reference velocity so we don't crash into the car infront of us, could
                 // also flag to try to change lanes.
                 // ref_vel = 29.5;   // mph
-                too_close = true; 
+                too_close = true;
+
+                // collison detection
+                // apply hard braking if needed if traffic too close
+                // before lane change, check if any fast moving traffic though not in safe zone but still coming from behind and may collide
+
+                /*
+                // lane change
+                // if left lane is available, and safe to switch, then switch to left lane
+                // else if right lane is available, and safe to switch, then switch to right lane
+                // else stay in same line for now, and check again for left lane in next step
+
                 if (lane > 0) {
-                  lane = 0;
-                }  
+                  intended_lane = lane - 1;      // if no traffic in left lane safe zone; remember that traffic may still appear if traffic speed is not checked
+
+                  for (int j = 0; j < sensor_fusion.size(); j++) {
+                    // car is in my lane
+                    float d = sensor_fusion[j][6];
+                    if (d < (2 + 4 * intended_lane + 2) && d > (2 + 4 * intended_lane - 2)) {
+                      double vx = sensor_fusion[j][3];
+                      double vy = sensor_fusion[j][4];
+                      double check_speed = sqrt(vx * vx + vy * vy);
+                      double check_car_s = sensor_fusion[j][5];
+
+                      check_car_s += ((double) prev_size * 0.02 * check_speed); // if using previous points can projects s value out 
+                      // check s values greater than mine and s gap
+                      if (fabs(check_car_s - car_s) < 20) {
+                        change_lane = false;
+                      }
+                    }
+                  }
+     
+                  if (change_lane) {
+                    lane = intended_lane;
+                    intend_to_change_lane = false;
+                  }
+                }
+
+                if ((intend_to_change_lane) && (lane < 2)) {
+                  change_lane = true;
+                  intended_lane = lane + 1;      // if no traffic in right lane safe zone; remember that traffic may still appear if traffic speed is not checked
+
+                  for (int k = 0; k < sensor_fusion.size(); k++) {
+                    // car is in my lane
+                    float d = sensor_fusion[k][6];
+                    if (d < (2 + 4 * intended_lane + 2) && d > (2 + 4 * intended_lane - 2)) {
+                      double vx = sensor_fusion[k][3];
+                      double vy = sensor_fusion[k][4];
+                      double check_speed = sqrt(vx * vx + vy * vy);
+
+                      double check_car_s = sensor_fusion[k][5];
+
+                      check_car_s += ((double) prev_size * 0.02 * check_speed); // if using previous points can projects s value out 
+                      // check s values greater than mine and s gap
+                      if (fabs(check_car_s - car_s) < 20) {
+                        change_lane = false;
+                      }
+                    }
+                  }
+     
+                  if (change_lane) {
+                    lane = intended_lane;
+                    intend_to_change_lane = false;
+                  }
+                } 
+
+                // else stay in same lane
+                */
+
               }
             }
           }
 
           if (too_close) {
-            ref_vel -= 0.224; 
+            ref_vel -= 0.168;         // default value : 0.224
+
+                // lane change
+                // if left lane is available, and safe to switch, then switch to left lane
+                // else if right lane is available, and safe to switch, then switch to right lane
+                // else stay in same line for now, and check again for left lane in next step
+                // if lane changes, wait at least 4 seconds before changing lane again
+                if ((lane > 0) && (counter > 200)) {
+                  intended_lane = lane - 1;      // if no traffic in left lane safe zone; remember that traffic may still appear if traffic speed is not checked
+
+                  for (int j = 0; j < sensor_fusion.size(); j++) {
+                    // car is in my lane
+                    float d = sensor_fusion[j][6];
+                    if (d < (2 + 4 * intended_lane + 2) && d > (2 + 4 * intended_lane - 2)) {
+                      double vx = sensor_fusion[j][3];
+                      double vy = sensor_fusion[j][4];
+                      double check_speed = sqrt(vx * vx + vy * vy);
+                      double check_car_s = sensor_fusion[j][5];
+
+                      check_car_s += ((double) prev_size * 0.02 * check_speed);     // if using previous points can projects s value out 
+                      // check s values greater than mine and s gap
+                      if (fabs(check_car_s - car_s) < 20) {
+                        change_lane = false;
+                      }
+                    }
+                  }
+     
+                  if (change_lane) {
+                    lane = intended_lane;
+                    intend_to_change_lane = false;
+                    counter = 0;
+                  }
+                }
+
+                if ((intend_to_change_lane) && (lane < 2) && (counter > 200)) {
+                  change_lane = true;
+                  intended_lane = lane + 1;      // if no traffic in right lane safe zone; remember that traffic may still appear if traffic speed is not checked
+
+                  for (int k = 0; k < sensor_fusion.size(); k++) {
+                    // car is in my lane
+                    float d = sensor_fusion[k][6];
+                    if (d < (2 + 4 * intended_lane + 2) && d > (2 + 4 * intended_lane - 2)) {
+                      double vx = sensor_fusion[k][3];
+                      double vy = sensor_fusion[k][4];
+                      double check_speed = sqrt(vx * vx + vy * vy);
+                      double check_car_s = sensor_fusion[k][5];
+
+                      check_car_s += ((double) prev_size * 0.02 * check_speed); // if using previous points can projects s value out 
+                      // check s values greater than mine and s gap
+
+                      if (fabs(check_car_s - car_s) < 20) {
+                        change_lane = false;
+                      }
+                    }
+                  }
+     
+                  if ((change_lane) && (counter > 5)) {
+                    lane = intended_lane;
+                    intend_to_change_lane = false;
+                  }
+                } 
+
+                // else stay in same lane
+                
+
           } else if (ref_vel < 49.5) {
             ref_vel += 0.224;
           }
