@@ -1,6 +1,18 @@
 # CarND-Path-Planning-Project
 Self-Driving Car Engineer Nanodegree Program
-   
+
+## Submitted by
+Abhishek Roy
+
+### Code model for generating paths
+The car drove according to the speed limit. The car started from zero speed (main.cpp lines 58) and incremented in step-wise manner till it reaches close to but less than the defined speed limit (main.cpp lines 168-174). It slowed down, and that too in step-wise manner, only when obstructed by traffic, and again tried to achieve near close to speed limit in absence of any obstruction by traffic. 
+
+The car did not come into contact with any of the other cars on the road. While driving in own lane, it was always looking for obstacle 30m ahead to slow down if needed to avoid any collision (main.cpp lines 133-135). The same was true for lane changes, it was looking for obstacle 20m ahead and behind to avoid lan change if needed for collision avoidance (main.cpp lines 150-151, lines 161-162).
+
+The car was able to smoothly change lanes when it made sense to do so, such as when behind a slower moving car and an adjacent lane was clear of other traffic. Before changing lanes it was always checked first to ensure the lane change happened to one of the 3 lanes on the right side of the road only, for example, no left lane change when in lane 0 (main.cpp lines 146), and no right lane change when in lane 2 (main.cpp lines 157). Also after changing lane it was made sure the car stayed in the lane for 4 secons before trying to make a lane change again (main.cpp line 177 & 184). This helped in avoiding quick toggling of lanes for the car when there was obstacle in two adjacent lanes, thus ensuring the car did not stay longer out side the lane lanes during changine lanes. For changing lanes, it always checked first to ensure there was no obstacle within +/- 20m in the new lane (main.cpp lines 150-151, lines 161-162). Thus, lane change happened smoothly. Left lane change was prioritized over right lane change.
+
+A list of widely spaced (x, y) waypoints evenly spaced at 30m was created. If previous path existed then, last two waypoints was added to the above, else from current positioning of the vehicle last two waypoints was generated. Together these 5 waypoints were converted into Frenet coordinate system to work in car reference frame for ease of computation and clarity (main.cpp lines 190-251). Then each 30m distace was divided into 50 waypoints using spline method for piecewise polynomial generation in order to find points inside it, and those waypoints were converted back into global coordinate system (main.cpp lines 253-318), to be passed on as list of (x, y) points to the simulator representing predicted trajectory of the car (main.cpp lines 339-342). Using spline method divides each 30m distance into 50 waypoints alignd in a way that helps the car to have smooth trajectory while driving and changing lanes.
+
 ### Simulator.
 You can download the Term3 Simulator which contains the Path Planning Project from the [releases tab (https://github.com/udacity/self-driving-car-sim/releases/tag/T3_v1.2).  
 

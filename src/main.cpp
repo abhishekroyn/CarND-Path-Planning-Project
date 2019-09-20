@@ -110,6 +110,7 @@ int main() {
           static double counter = 0;
           counter++;
 
+          // adjust the counter so that the stored value does not become a very larger number
           if (counter > 1000) {
             counter = 500;
           }
@@ -167,7 +168,7 @@ int main() {
 
           if (too_close) {
             // lower reference velocity so we don't crash into the car infront of us
-            ref_vel -= 0.224;               //  0.168;
+            ref_vel -= 0.224;
           } else if (ref_vel < 49.5) {
             // increase reference velocity till it reaches close to speed-limit
             ref_vel += 0.224;
@@ -252,6 +253,7 @@ int main() {
           // create a spline
           tk::spline s;
 
+          // DEBUG BEGINS
           /*
           // sort (x, y) points as requirement for spline
 
@@ -271,6 +273,7 @@ int main() {
             ptsy[i] = vect[i].second;
           }
           */
+          // DEBUG ENDS
 
           // set (x, y) points to the spline
           s.set_points(ptsx, ptsy);
@@ -294,7 +297,7 @@ int main() {
 
           // Fill up the rest of our path planner after filling it with previous points, here we will always output 50 points
           for (int i = 1; i <= 50 - previous_path_x.size(); i++) {
-            double N = (target_dist / (0.02 * ref_vel / 2.24));
+            double N = (target_dist / (0.02 * ref_vel / 2.24));       // 2.24 for 1mps equals 2.24 mph
             double x_point = x_add_on + (target_x) / N;
             double y_point = s(x_point);
 
